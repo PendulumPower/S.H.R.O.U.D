@@ -2,11 +2,13 @@ name: S.H.R.O.U.D Build Pipeline
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "**" ] # Triggers on direct pushes and merges across all branches
+  pull_request:
+    types: [opened, synchronize, reopened, closed]
+  create: # Triggers on new branch or tag creation
   workflow_dispatch:
 
 jobs:
-  # This represents your actual game build or test process
   build-game:
     runs-on: ubuntu-latest
     steps:
@@ -16,42 +18,62 @@ jobs:
       - name: Simulate Build Step
         run: echo "Compiling S.H.R.O.U.D game files..."
 
-  # This job handles notifications based on how the build job finished
   send-notifications:
     runs-on: ubuntu-latest
-    needs: build-game # Waits for the build job to finish
-    if: always()      # Runs even if the build job fails
+    needs: build-game
+    if: always() # Ensures notifications run regardless of build outcome
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      # 🟢 SUCCESS NOTIFICATION
-      - name: Discord Success Notification
-        if: ${{ needs.build-game.result == 'success' }}
+      # 1. PULL REQUEST NOTIFICATIONS
+      - name: Discord Notification - Pull Request
+        if: github.event_name == 'pull_request'
         uses: niranjanshk27/discord-notify@main
         with:
           WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
-          TITLE: "🟢 S.H.R.O.U.D Build Passed!"
+          TITLE: "🔀 PR ${{ github.event.action }}: #${{ github.event.number }}"
           CONTENT: |
+            **Action:** Pull Request ${{ github.event.action }}
             **Author:** ${{ github.actor }}
-            **Commit:** ${{ github.event.head_commit.message }}
-            **Branch:** `${{ github.ref_name }}`
+            **Source Branch:** `${{ github.event.pull_request.head.ref }}` ➔ `${{ github.event.pull_request.base.ref }}`
+            **Build Result:** ${{ needs.build-game.result }}
+            
+            **PR Title:** ${{ github.event.pull_request.title }}
+            **PR Description:**
+            ${{ github.event.pull_request.body || 'No description provided.' }}
           EMBEDS: "true"
-          RESULT: "success" # Sets embed color to green
+          RESULT: ${{ needs.build-game.result }}
 
-      # 🔴 FAILURE NOTIFICATION (With Role Ping)
-      - name: Discord Failure Notification
-        if: ${{ needs.build-game.result == 'failure' }}
+      # 2. NEW BRANCH CREATION NOTIFICATIONS
+      - name: Discord Notification - New Branch
+        if: github.event_name == 'create' && github.event.ref_type == 'branch'
         uses: niranjanshk27/discord-notify@main
         with:
           WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
-          TITLE: "🔴 S.H.R.O.U.D Build Failed!"
+          TITLE: "🌱 New Branch Created: ${{ github.event.ref }}"
           CONTENT: |
-            ⚠️ **Attention @everyone** ⚠️
-            
-            **Triggered By:** ${{ github.actor }}
-            **Last Commit:** ${{ github.event.head_commit.message }}
-            
-            The latest build pipeline broke. Please check the GitHub Actions logs to debug!
+            **Action:** New Branch Created
+            **Author:** ${{ github.actor }}
+            **Branch Name:** `${{ github.event.ref }}`
+            **Base Ref:** `${{ github.event.master_branch }}`
           EMBEDS: "true"
-          RESULT: "failure" # Sets embed color to red
+          RESULT: "success"
+
+      # 3. PUSH / MERGE NOTIFICATIONS
+      - name: Discord Notification - Push or Merge
+        if: github.event_name == 'push'
+        uses: niranjanshk27/discord-notify@main
+        with:
+          WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
+          TITLE: "${{ needs.build-game.result == 'success' && '🟢' || '🔴' }} Commit Pushed to ${{ github.ref_name }}"
+          CONTENT: |
+            **Action:** ${{ contains(github.event.head_commit.message, 'Merge pull request') && 'Merged Pull Request' || 'Code Push' }}
+            **Author:** ${{ github.actor }}
+            **Branch:** `${{ github.ref_name }}`
+            **Build Result:** ${{ needs.build-game.result }}
+            
+            **Commit Message & Details:**
+            ${{ github.event.head_commit.message }}
+          EMBEDS: "true"
+          RESULT: ${{ needs.build-game.result }}
