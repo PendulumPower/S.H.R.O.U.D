@@ -57,12 +57,12 @@ jobs:
         env:
           DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
           EVENT_NAME: ${{ github.event_name }}
-          ACTION: ${{ github.event.action }}
+          EVENT_ACTION: ${{ github.event.action }}
           ACTOR: ${{ github.actor }}
           REF_NAME: ${{ github.ref_name }}
           BUILD_RESULT: ${{ needs.build-game.result }}
           
-          # Event Specific Payloads
+          # Event Details
           COMMIT_MSG: ${{ github.event.head_commit.message }}
           COMMIT_AUTHOR: ${{ github.event.head_commit.author.name }}
           PR_TITLE: ${{ github.event.pull_request.title || github.event.issue.title }}
@@ -73,54 +73,64 @@ jobs:
           REF_TYPE: ${{ github.event.ref_type }}
           REF: ${{ github.event.ref }}
         run: |
-          python3 -c '
-          import os, json, urllib.request
+          cat << 'EOF' > notify.py
+          import os
+          import json
+          import urllib.request
 
-          webhook_url = os.environ.get("DISCORD_WEBHOOK")
+          webhook_url = os.environ.get("DISCORD_WEBHOOK", "").strip()
           if not webhook_url:
-              print("No webhook URL configured.")
-              exit(0)
+              print("ERROR: DISCORD_WEBHOOK secret is missing or empty.")
+              exit(1)
 
-          event_name = os.environ.get("EVENT_NAME")
-          action = os.environ.get("ACTION", "")
+          event_name = os.environ.get("EVENT_NAME", "")
+          action = os.environ.get("EVENT_ACTION", "")
           actor = os.environ.get("ACTOR", "Unknown")
           build_result = os.environ.get("BUILD_RESULT", "success")
           files = os.environ.get("CHANGED_FILES", "None")
-          
-          color = 3066993 if build_result == "success" else 15158332 # Green or Red
+
+          color = 3066993 if build_result == "success" else 15158332
           status_icon = "🟢" if build_result == "success" else "🔴"
 
           title = "S.H.R.O.U.D Notification"
           description = ""
 
-          # 1. PR / ISSUE COMMENTS
           if event_name == "issue_comment" and os.environ.get("COMMENT_BODY"):
-              title = f"💬 New Comment on PR #{os.environ.get(\"PR_NUM\")}"
+              pr_num = os.environ.get("PR_NUM", "")
+              pr_title = os.environ.get("PR_TITLE", "")
               comment = os.environ.get("COMMENT_BODY", "")
-              description = f"**Action Performed By:** {actor}\n**PR Title:** {os.environ.get(\"PR_TITLE\")}\n\n**Comment Content:**\n> {comment}"
-              color = 3447003 # Blue
+              title = f"💬 New Comment on PR #{pr_num}"
+              description = f"**Action Performed By:** {actor}\n**PR Title:** {pr_title}\n\n**Comment Content:**\n> {comment}"
+              color = 3447003
 
-          # 2. PULL REQUESTS
           elif event_name == "pull_request":
-              title = f"🔀 PR {action.upper()}: #{os.environ.get(\"PR_NUM\")}"
+              pr_num = os.environ.get("PR_NUM", "")
+              pr_title = os.environ.get("PR_TITLE", "")
               pr_body = os.environ.get("PR_BODY") or "No description provided."
-              description = f"**Action Performed By:** {actor}\n**PR Title:** {os.environ.get(\"PR_TITLE\")}\n**Build Status:** {build_result}\n\n**PR Description:**\n{pr_body}\n\n**Modified Files:**\n{files}"
+              title = f"🔀 PR {action.upper()}: #{pr_num}"
+              description = f"**Action Performed By:** {actor}\n**PR Title:** {pr_title}\n**Build Status:** {build_result}\n\n**PR Description:**\n{pr_body}\n\n**Modified Files:**\n{files}"
 
-          # 3. NEW BRANCH
           elif event_name == "create" and os.environ.get("REF_TYPE") == "branch":
-              title = f"🌱 New Branch Created: {os.environ.get(\"REF\")}"
-              description = f"**Action Performed By:** {actor}\n**Branch Name:** `{os.environ.get(\"REF\")}`"
+              ref = os.environ.get("REF", "")
+              title = f"🌱 New Branch Created: {ref}"
+              description = f"**Action Performed By:** {actor}\n**Branch Name:** `{ref}`"
               color = 3066993
 
-          # 4. PUSH / MERGE
           elif event_name == "push":
               commit_msg = os.environ.get("COMMIT_MSG", "No commit message")
               commit_author = os.environ.get("COMMIT_AUTHOR", actor)
-              branch = os.environ.get("REF_NAME")
+              branch = os.environ.get("REF_NAME", "")
               
               push_type = "Merged Pull Request" if "Merge pull request" in commit_msg else "Direct Commit Push"
               title = f"{status_icon} {push_type} on {branch}"
               description = f"**Action Performed By:** {actor}\n**Commit Author:** {commit_author}\n**Branch:** `{branch}`\n**Build Result:** {build_result}\n\n**Commit Details:**\n{commit_msg}\n\n**Modified Files:**\n{files}"
+
+          else:
+              title = f"⚙️ Pipeline Triggered ({event_name})"
+              description = f"**Action Performed By:** {actor}\n**Build Result:** {build_result}"
+
+          if len(description) > 4000:
+              description = description[:3990] + "\n... (truncated)"
 
           payload = {
               "embeds": [{
@@ -133,98 +143,18 @@ jobs:
           req = urllib.request.Request(
               webhook_url,
               data=json.dumps(payload).encode("utf-8"),
-              headers={"Content-Type": "application/json", "User-Agent": "GitHub-Actions-Webhook"}
+              headers={
+                  "Content-Type": "application/json",
+                  "User-Agent": "GitHub-Actions-Webhook"
+              }
           )
-          urllib.request.urlopen(req)
-          '
-          if [ "${{ github.event_name }}" = "pull_request" ]; then
-            FILES=$(git diff --name-only origin/${{ github.event.pull_request.base.ref }}...${{ github.sha }} | head -n 10)
-          elif [ "${{ github.event_name }}" = "push" ]; then
-            FILES=$(git diff-tree --no-commit-id --name-only -r ${{ github.sha }} | head -n 10)
-          else
-            FILES="None"
-          fi
 
-          if [ -z "$FILES" ]; then
-            FILES="No files modified"
-          else
-            FILES=$(echo "$FILES" | awk '{print "• `" $0 "`"}')
-          fi
+          try:
+              with urllib.request.urlopen(req) as resp:
+                  print(f"Notification sent successfully with status code {resp.status}")
+          except Exception as e:
+              print(f"Failed to send Discord notification: {e}")
+              exit(1)
+          EOF
 
-          echo "list<<EOF" >> $GITHUB_OUTPUT
-          echo "$FILES" >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
-
-      # 1. PR / ISSUE COMMENT NOTIFICATION
-      - name: Discord Notification - Comment Posted
-        if: github.event_name == 'issue_comment' && github.event.issue.pull_request != null
-        uses: niranjanshk27/discord-notify@main
-        with:
-          WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
-          TITLE: "💬 New Comment on PR #${{ github.event.issue.number }}"
-          CONTENT: |
-            **Action Performed By:** ${{ github.actor }} (@${{ github.event.comment.user.login }})
-            **PR Title:** ${{ github.event.issue.title }}
-            
-            **Comment Content:**
-            > ${{ github.event.comment.body }}
-          EMBEDS: "true"
-          RESULT: "success"
-
-      # 2. PULL REQUEST NOTIFICATION
-      - name: Discord Notification - Pull Request
-        if: github.event_name == 'pull_request'
-        uses: niranjanshk27/discord-notify@main
-        with:
-          WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
-          TITLE: "🔀 PR ${{ github.event.action }}: #${{ github.event.number }}"
-          CONTENT: |
-            **Action Performed By:** ${{ github.actor }}
-            **PR Creator:** @${{ github.event.pull_request.user.login }}
-            **Action:** Pull Request ${{ github.event.action }}
-            **Branches:** `${{ github.event.pull_request.head.ref }}` ➔ `${{ github.event.pull_request.base.ref }}`
-            **Build Result:** ${{ needs.build-game.result }}
-            
-            **PR Description:**
-            ${{ github.event.pull_request.body || 'No description provided.' }}
-            
-            **Modified Files:**
-            ${{ steps.changed_files.outputs.list }}
-          EMBEDS: "true"
-          RESULT: ${{ needs.build-game.result }}
-
-      # 3. NEW BRANCH CREATION NOTIFICATION
-      - name: Discord Notification - New Branch
-        if: github.event_name == 'create' && github.event.ref_type == 'branch'
-        uses: niranjanshk27/discord-notify@main
-        with:
-          WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
-          TITLE: "🌱 New Branch Created: ${{ github.event.ref }}"
-          CONTENT: |
-            **Action Performed By:** ${{ github.actor }}
-            **Branch Name:** `${{ github.event.ref }}`
-            **Base Branch:** `${{ github.event.master_branch }}`
-          EMBEDS: "true"
-          RESULT: "success"
-
-      # 4. PUSH / MERGE NOTIFICATION
-      - name: Discord Notification - Push or Merge
-        if: github.event_name == 'push'
-        uses: niranjanshk27/discord-notify@main
-        with:
-          WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
-          TITLE: "${{ needs.build-game.result == 'success' && '🟢' || '🔴' }} Commit Pushed to ${{ github.ref_name }}"
-          CONTENT: |
-            **Action Performed By:** ${{ github.actor }}
-            **Commit Author:** ${{ github.event.head_commit.author.name }} (@${{ github.event.head_commit.author.username || github.actor }})
-            **Type:** ${{ contains(github.event.head_commit.message, 'Merge pull request') && 'Merged Pull Request' || 'Direct Push' }}
-            **Target Branch:** `${{ github.ref_name }}`
-            **Build Result:** ${{ needs.build-game.result }}
-            
-            **Commit Description / Message:**
-            ${{ github.event.head_commit.message }}
-            
-            **Modified Files:**
-            ${{ steps.changed_files.outputs.list }}
-          EMBEDS: "true"
-          RESULT: ${{ needs.build-game.result }}
+          python3 notify.py
