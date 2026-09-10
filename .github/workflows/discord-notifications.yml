@@ -1,9 +1,20 @@
-      - name: Send Discord Notification
+name: Test Discord Notification
+
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch: # 👈 This enables the manual "Run workflow" test button
+
+jobs:
+  test-notification:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send Test Notification
         uses: niranjanshk27/discord-notify@main
-        if: always() # Ensures the notification runs even if previous steps fail
+        if: always()
         with:
           WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
-          TITLE: "Build Status for ${{ github.repository }}"
-          CONTENT: "Workflow run completed with status: **${{ job.status }}**"
+          TITLE: "🤖 Test Run for S.H.R.O.U.D"
+          CONTENT: "If you see this, your Discord notification system is working perfectly!"
           EMBEDS: "true"
-          RESULT: ${{ job.status }} # Dynamically updates embed color based on success/failure
+          RESULT: "success"
