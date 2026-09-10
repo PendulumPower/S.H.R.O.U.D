@@ -1,20 +1,57 @@
-name: Test Discord Notification
+name: S.H.R.O.U.D Build Pipeline
 
 on:
   push:
     branches: [ "main" ]
-  workflow_dispatch: # 👈 This enables the manual "Run workflow" test button
+  workflow_dispatch:
 
 jobs:
-  test-notification:
+  # This represents your actual game build or test process
+  build-game:
     runs-on: ubuntu-latest
     steps:
-      - name: Send Test Notification
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Simulate Build Step
+        run: echo "Compiling S.H.R.O.U.D game files..."
+
+  # This job handles notifications based on how the build job finished
+  send-notifications:
+    runs-on: ubuntu-latest
+    needs: build-game # Waits for the build job to finish
+    if: always()      # Runs even if the build job fails
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      # 🟢 SUCCESS NOTIFICATION
+      - name: Discord Success Notification
+        if: ${{ needs.build-game.result == 'success' }}
         uses: niranjanshk27/discord-notify@main
-        if: always()
         with:
           WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
-          TITLE: "🤖 Test Run for S.H.R.O.U.D"
-          CONTENT: "If you see this, your Discord notification system is working perfectly!"
+          TITLE: "🟢 S.H.R.O.U.D Build Passed!"
+          CONTENT: |
+            **Author:** ${{ github.actor }}
+            **Commit:** ${{ github.event.head_commit.message }}
+            **Branch:** `${{ github.ref_name }}`
           EMBEDS: "true"
-          RESULT: "success"
+          RESULT: "success" # Sets embed color to green
+
+      # 🔴 FAILURE NOTIFICATION (With Role Ping)
+      - name: Discord Failure Notification
+        if: ${{ needs.build-game.result == 'failure' }}
+        uses: niranjanshk27/discord-notify@main
+        with:
+          WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
+          TITLE: "🔴 S.H.R.O.U.D Build Failed!"
+          CONTENT: |
+            ⚠️ **Attention @everyone** ⚠️
+            
+            **Triggered By:** ${{ github.actor }}
+            **Last Commit:** ${{ github.event.head_commit.message }}
+            
+            The latest build pipeline broke. Please check the GitHub Actions logs to debug!
+          EMBEDS: "true"
+          RESULT: "failure" # Sets embed color to red
