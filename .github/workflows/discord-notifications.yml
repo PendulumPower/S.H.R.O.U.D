@@ -1,0 +1,9 @@
+      - name: Send Discord Notification
+        uses: niranjanshk27/discord-notify@main
+        if: always() # Ensures the notification runs even if previous steps fail
+        with:
+          WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
+          TITLE: "Build Status for ${{ github.repository }}"
+          CONTENT: "Workflow run completed with status: **${{ job.status }}**"
+          EMBEDS: "true"
+          RESULT: ${{ job.status }} # Dynamically updates embed color based on success/failure
