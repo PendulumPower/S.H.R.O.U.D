@@ -2,10 +2,12 @@ name: S.H.R.O.U.D Build Pipeline
 
 on:
   push:
-    branches: [ "**" ] # Triggers on direct pushes and merges across all branches
+    branches: [ "**" ]
   pull_request:
     types: [opened, synchronize, reopened, closed]
-  create: # Triggers on new branch or tag creation
+  issue_comment:
+    types: [created] # Triggers when a comment is posted on PRs
+  create: # Triggers on new branch creation
   workflow_dispatch:
 
 jobs:
@@ -21,12 +23,52 @@ jobs:
   send-notifications:
     runs-on: ubuntu-latest
     needs: build-game
-    if: always() # Ensures notifications run regardless of build outcome
+    if: always()
     steps:
-      - name: Checkout Code
+      - name: Checkout Full Code History
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
-      # 1. PULL REQUEST NOTIFICATIONS
+      # Fetch list of modified files based on trigger event
+      - name: Get Changed Files
+        id: changed_files
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            FILES=$(git diff --name-only origin/${{ github.event.pull_request.base.ref }}...${{ github.sha }} | head -n 10)
+          elif [ "${{ github.event_name }}" = "push" ]; then
+            FILES=$(git diff-tree --no-commit-id --name-only -r ${{ github.sha }} | head -n 10)
+          else
+            FILES="None"
+          fi
+
+          if [ -z "$FILES" ]; then
+            FILES="No files modified"
+          else
+            FILES=$(echo "$FILES" | awk '{print "• `" $0 "`"}')
+          fi
+
+          echo "list<<EOF" >> $GITHUB_OUTPUT
+          echo "$FILES" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      # 1. PR / ISSUE COMMENT NOTIFICATION
+      - name: Discord Notification - Comment Posted
+        if: github.event_name == 'issue_comment' && github.event.issue.pull_request != null
+        uses: niranjanshk27/discord-notify@main
+        with:
+          WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
+          TITLE: "💬 New Comment on PR #${{ github.event.issue.number }}"
+          CONTENT: |
+            **Action Performed By:** ${{ github.actor }} (@${{ github.event.comment.user.login }})
+            **PR Title:** ${{ github.event.issue.title }}
+            
+            **Comment Content:**
+            > ${{ github.event.comment.body }}
+          EMBEDS: "true"
+          RESULT: "success"
+
+      # 2. PULL REQUEST NOTIFICATION
       - name: Discord Notification - Pull Request
         if: github.event_name == 'pull_request'
         uses: niranjanshk27/discord-notify@main
@@ -34,18 +76,21 @@ jobs:
           WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
           TITLE: "🔀 PR ${{ github.event.action }}: #${{ github.event.number }}"
           CONTENT: |
+            **Action Performed By:** ${{ github.actor }}
+            **PR Creator:** @${{ github.event.pull_request.user.login }}
             **Action:** Pull Request ${{ github.event.action }}
-            **Author:** ${{ github.actor }}
-            **Source Branch:** `${{ github.event.pull_request.head.ref }}` ➔ `${{ github.event.pull_request.base.ref }}`
+            **Branches:** `${{ github.event.pull_request.head.ref }}` ➔ `${{ github.event.pull_request.base.ref }}`
             **Build Result:** ${{ needs.build-game.result }}
             
-            **PR Title:** ${{ github.event.pull_request.title }}
             **PR Description:**
             ${{ github.event.pull_request.body || 'No description provided.' }}
+            
+            **Modified Files:**
+            ${{ steps.changed_files.outputs.list }}
           EMBEDS: "true"
           RESULT: ${{ needs.build-game.result }}
 
-      # 2. NEW BRANCH CREATION NOTIFICATIONS
+      # 3. NEW BRANCH CREATION NOTIFICATION
       - name: Discord Notification - New Branch
         if: github.event_name == 'create' && github.event.ref_type == 'branch'
         uses: niranjanshk27/discord-notify@main
@@ -53,14 +98,13 @@ jobs:
           WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
           TITLE: "🌱 New Branch Created: ${{ github.event.ref }}"
           CONTENT: |
-            **Action:** New Branch Created
-            **Author:** ${{ github.actor }}
+            **Action Performed By:** ${{ github.actor }}
             **Branch Name:** `${{ github.event.ref }}`
-            **Base Ref:** `${{ github.event.master_branch }}`
+            **Base Branch:** `${{ github.event.master_branch }}`
           EMBEDS: "true"
           RESULT: "success"
 
-      # 3. PUSH / MERGE NOTIFICATIONS
+      # 4. PUSH / MERGE NOTIFICATION
       - name: Discord Notification - Push or Merge
         if: github.event_name == 'push'
         uses: niranjanshk27/discord-notify@main
@@ -68,12 +112,16 @@ jobs:
           WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
           TITLE: "${{ needs.build-game.result == 'success' && '🟢' || '🔴' }} Commit Pushed to ${{ github.ref_name }}"
           CONTENT: |
-            **Action:** ${{ contains(github.event.head_commit.message, 'Merge pull request') && 'Merged Pull Request' || 'Code Push' }}
-            **Author:** ${{ github.actor }}
-            **Branch:** `${{ github.ref_name }}`
+            **Action Performed By:** ${{ github.actor }}
+            **Commit Author:** ${{ github.event.head_commit.author.name }} (@${{ github.event.head_commit.author.username || github.actor }})
+            **Type:** ${{ contains(github.event.head_commit.message, 'Merge pull request') && 'Merged Pull Request' || 'Direct Push' }}
+            **Target Branch:** `${{ github.ref_name }}`
             **Build Result:** ${{ needs.build-game.result }}
             
-            **Commit Message & Details:**
+            **Commit Description / Message:**
             ${{ github.event.head_commit.message }}
+            
+            **Modified Files:**
+            ${{ steps.changed_files.outputs.list }}
           EMBEDS: "true"
           RESULT: ${{ needs.build-game.result }}
