@@ -10,6 +10,11 @@ on:
   create:
   workflow_dispatch:
 
+# Added global or job-level permissions to ensure the runner can read repository contents
+permissions:
+  contents: read
+  pull-requests: read
+
 jobs:
   build-game:
     runs-on: ubuntu-latest
@@ -31,13 +36,16 @@ jobs:
       - name: Checkout Full Code History
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0
+          fetch-depth: 0 # Required to trace the git diff history
 
-      # Get list of changed files
+      # Fixed: Uses github.event.pull_request.base.sha to completely avoid missing reference errors
       - name: Get Changed Files
         id: changed_files
         run: |
-          FILES=$(git diff --name-only origin/${{ github.event.pull_request.base.ref }}...${{ github.sha }} | head -n 10)
+          BASE_SHA="${{ github.event.pull_request.base.sha }}"
+          HEAD_SHA="${{ github.sha }}"
+          
+          FILES=$(git diff --name-only $BASE_SHA...$HEAD_SHA | head -n 10)
 
           if [ -z "$FILES" ]; then
             FILES="No files modified"
@@ -60,9 +68,12 @@ jobs:
           
           # Event Details
           PR_TITLE: ${{ github.event.pull_request.title }}
-          PR_BODY: ${{ github.event.pull_request.body }}
           PR_NUM: ${{ github.event.number }}
           CHANGED_FILES: ${{ steps.changed_files.outputs.list }}
+          
+          # Fixed: Pass the raw context directly into Python via an environment variable 
+          # to protect against special characters breaking your Bash shell execution.
+          PR_BODY: ${{ github.event.pull_request.body }}
         run: |
           cat << 'EOF' > notify.py
           import os
@@ -82,7 +93,7 @@ jobs:
 
           pr_num = os.environ.get("PR_NUM", "")
           pr_title = os.environ.get("PR_TITLE", "")
-          pr_body = os.environ.get("PR_BODY") or "No description provided."
+          pr_body = os.environ.get("PR_BODY", "").strip() or "No description provided."
 
           # Setup layout defaults
           color = 3066993 if build_result == "success" else 15158332
