@@ -1,5 +1,7 @@
 [gd_scene format=3 uid="uid://ccg3f62akah20"]
 
+[ext_resource type="Script" uid="uid://dvkw2m8gepah7" path="res://player.gd" id="1_mncer"]
+
 [sub_resource type="Environment" id="Environment_g50wj"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_g50wj"]
@@ -20,8 +22,12 @@ environment = SubResource("Environment_g50wj")
 [node name="Entities" type="Node3D" parent="." unique_id=1491628217]
 
 [node name="Player" type="CharacterBody3D" parent="Entities" unique_id=818783011]
+script = ExtResource("1_mncer")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Entities/Player" unique_id=602977602]
 shape = SubResource("CapsuleShape3D_g50wj")
+
+[node name="Camera3D" type="Camera3D" parent="Entities/Player" unique_id=1725444172]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
 
 [node name="Deviants" type="Node3D" parent="Entities" unique_id=285729945]
