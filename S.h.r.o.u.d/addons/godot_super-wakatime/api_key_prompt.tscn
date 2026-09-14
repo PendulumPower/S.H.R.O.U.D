@@ -1,0 +1,59 @@
+[gd_scene format=3 uid="uid://bv3rxl15k7bj6"]
+
+[sub_resource type="Theme" id="Theme_qedjm"]
+
+[sub_resource type="Theme" id="Theme_1xn0x"]
+
+[node name="ApiKeyPrompt" type="PopupPanel" unique_id=1695233108]
+oversampling_override = 1.0
+title = "API key configuration"
+initial_position = 1
+size = Vector2i(371, 100)
+visible = true
+always_on_top = true
+content_scale_aspect = 4
+content_scale_stretch = 1
+theme = SubResource("Theme_qedjm")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="." unique_id=1588289725]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 4.0
+offset_top = 4.0
+offset_right = -4.0
+offset_bottom = -4.0
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
+theme = SubResource("Theme_1xn0x")
+
+[node name="HBoxContainerTop" type="HBoxContainer" parent="VBoxContainer" unique_id=2047675437]
+layout_mode = 2
+
+[node name="LineEdit" type="LineEdit" parent="VBoxContainer/HBoxContainerTop" unique_id=2031850746]
+custom_minimum_size = Vector2(200, 25)
+layout_mode = 2
+size_flags_horizontal = 6
+size_flags_vertical = 0
+placeholder_text = "1bc747e3-f029-40d1-94c5-ff67428f8a50"
+expand_to_text_length = true
+secret = true
+
+[node name="ShowButton" type="Button" parent="VBoxContainer/HBoxContainerTop" unique_id=712369402]
+layout_mode = 2
+size_flags_horizontal = 6
+size_flags_vertical = 4
+action_mode = 0
+text = "Show"
+
+[node name="HBoxContainerBottom" type="HBoxContainer" parent="VBoxContainer" unique_id=1348119666]
+layout_mode = 2
+
+[node name="SubmitButton" type="Button" parent="VBoxContainer/HBoxContainerBottom" unique_id=857839081]
+layout_mode = 2
+size_flags_horizontal = 6
+size_flags_vertical = 0
+action_mode = 0
+text = "Submit"

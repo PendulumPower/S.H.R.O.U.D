@@ -1,0 +1,45 @@
+[gd_scene format=3 uid="uid://dn4v5wkv5m7dy"]
+
+[ext_resource type="PackedScene" uid="uid://dkw7wke0fym7t" path="res://assets/shroud_menu/shroud_menu.glb" id="1_lti8b"]
+[ext_resource type="Script" uid="uid://cxmtkb7d5apot" path="res://scripts/menu_camera_animation.gd" id="1_ouk20"]
+
+[sub_resource type="Environment" id="Environment_clyb8"]
+ssr_enabled = true
+ssao_enabled = true
+ssil_enabled = true
+sdfgi_enabled = true
+glow_enabled = true
+fog_enabled = true
+fog_light_color = Color(0, 0, 0, 1)
+fog_density = 0.05
+volumetric_fog_enabled = true
+volumetric_fog_albedo = Color(0.27330798, 0.23611748, 0.21990657, 1)
+adjustment_enabled = true
+adjustment_contrast = 1.15
+
+[node name="Node3D" type="Node3D" unique_id=1134085247]
+
+[node name="Camera3D" type="Camera3D" parent="." unique_id=1891236397]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.75, 17.75)
+script = ExtResource("1_ouk20")
+
+[node name="shroud_menu" parent="." unique_id=2117202208 instance=ExtResource("1_lti8b")]
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="." unique_id=1879486868]
+transform = Transform3D(1, 0, 0, 0, -0.1736482, 0.9848077, 0, -0.9848077, -0.1736482, 0, 0, 0)
+light_color = Color(1, 0.6464322, 0.47610474, 1)
+light_energy = 0.15
+light_bake_mode = 1
+shadow_enabled = true
+sky_mode = 1
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=234043126]
+environment = SubResource("Environment_clyb8")
+
+[node name="AreaLight3D" type="AreaLight3D" parent="." unique_id=1730881554]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.0667415, 15.761032)
+light_color = Color(1, 0.78431374, 0.6509804, 1)
+light_energy = 4.0
+light_bake_mode = 1
+shadow_enabled = true
+area_size = Vector2(5.0045176, 0.5269861)
