@@ -4,6 +4,14 @@
 
 [sub_resource type="Environment" id="Environment_g50wj"]
 
+[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_1b73q"]
+
+[sub_resource type="BoxMesh" id="BoxMesh_g50wj"]
+size = Vector3(29.819595, 0.49121094, 38.11316)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_mncer"]
+size = Vector3(29.535995, 0.49316406, 37.9393)
+
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_g50wj"]
 
 [node name="Root" type="Node3D" unique_id=689738362]
@@ -19,9 +27,21 @@ environment = SubResource("Environment_g50wj")
 
 [node name="Environment" type="StaticBody3D" parent="StageGeometry" unique_id=1362861450]
 
+[node name="StaticBody3D" type="StaticBody3D" parent="StageGeometry/Environment" unique_id=330547928]
+physics_material_override = SubResource("PhysicsMaterial_1b73q")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="StageGeometry/Environment/StaticBody3D" unique_id=915860499]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.3431778, -0.25439453, -0.95147705)
+mesh = SubResource("BoxMesh_g50wj")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="StageGeometry/Environment/StaticBody3D" unique_id=1626224094]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.4391861, -0.25341797, -0.90159607)
+shape = SubResource("BoxShape3D_mncer")
+
 [node name="Entities" type="Node3D" parent="." unique_id=1491628217]
 
 [node name="Player" type="CharacterBody3D" parent="Entities" unique_id=818783011]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.1643724, 0)
 script = ExtResource("1_mncer")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Entities/Player" unique_id=602977602]

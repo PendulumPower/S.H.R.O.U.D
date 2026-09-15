@@ -4,36 +4,27 @@ const SPEED = 5.0
 const JUMP_VELOCITY = 4.5
 const MOUSE_SENSITIVITY = 0.002
 
-# Get the gravity from the project settings so it syncs with your world.
 var gravity = ProjectSettings.get_setting("physics/3d/default_gravity")
-
-# Make sure this matches the exact name of your camera node
 @onready var camera = $Camera3D 
 
 func _ready():
-	# This hides the mouse cursor and traps it inside the game window
 	Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
 
 func _input(event):
-	# Handle camera rotation based on mouse movement
 	if event is InputEventMouseMotion:
 		rotate_y(-event.relative.x * MOUSE_SENSITIVITY)
 		camera.rotate_x(-event.relative.y * MOUSE_SENSITIVITY)
 		
-		# Clamp the up/down rotation so the player can't break their neck looking backward
 		camera.rotation.x = clamp(camera.rotation.x, deg_to_rad(-90), deg_to_rad(90))
 
 func _physics_process(delta):
-	# Apply gravity.
 	if not is_on_floor():
 		velocity.y -= gravity * delta
 
-	# Handle jumping.
-	if Input.is_action_just_pressed("ui_accept") and is_on_floor():
+	if Input.is_action_just_pressed("jump") and is_on_floor():
 		velocity.y = JUMP_VELOCITY
 
-	# Get the input direction and handle the movement/deceleration.
-	var input_dir = Input.get_vector("ui_left", "ui_right", "ui_up", "ui_down")
+	var input_dir = Input.get_vector("move_left", "move_right", "move_forward", "move_backward")
 	var direction = (transform.basis * Vector3(input_dir.x, 0, input_dir.y)).normalized()
 	
 	if direction:
