@@ -22,19 +22,32 @@ size = Vector3(29.535995, 0.49316406, 37.9393)
 environment = SubResource("Environment_g50wj")
 
 [node name="DirectionalLight3D" type="DirectionalLight3D" parent="CoreSetup" unique_id=817318875]
+transform = Transform3D(1, 0, 0, 0, -0.80782396, 0.58942395, 0, -0.58942395, -0.80782396, 0, 7.1590037, -21.871082)
 
 [node name="StageGeometry" type="Node3D" parent="." unique_id=1555146198]
 
-[node name="Environment" type="StaticBody3D" parent="StageGeometry" unique_id=1362861450]
+[node name="Environment" type="Node3D" parent="StageGeometry" unique_id=321921663]
 
-[node name="StaticBody3D" type="StaticBody3D" parent="StageGeometry/Environment" unique_id=330547928]
+[node name="Floor" type="StaticBody3D" parent="StageGeometry/Environment" unique_id=330547928]
 physics_material_override = SubResource("PhysicsMaterial_1b73q")
 
-[node name="MeshInstance3D" type="MeshInstance3D" parent="StageGeometry/Environment/StaticBody3D" unique_id=915860499]
+[node name="FloorMesh" type="MeshInstance3D" parent="StageGeometry/Environment/Floor" unique_id=915860499]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.3431778, -0.25439453, -0.95147705)
 mesh = SubResource("BoxMesh_g50wj")
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="StageGeometry/Environment/StaticBody3D" unique_id=1626224094]
+[node name="FloorCollider" type="CollisionShape3D" parent="StageGeometry/Environment/Floor" unique_id=1626224094]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.4391861, -0.25341797, -0.90159607)
+shape = SubResource("BoxShape3D_mncer")
+
+[node name="Cube1" type="StaticBody3D" parent="StageGeometry/Environment" unique_id=2008067852]
+transform = Transform3D(0.1, 0, 0, 0, 7.11, 0, 0, 0, 0.1, 0, 3.3593242, 8.291591)
+physics_material_override = SubResource("PhysicsMaterial_1b73q")
+
+[node name="Cube1Mesh" type="MeshInstance3D" parent="StageGeometry/Environment/Cube1" unique_id=2128804949]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.3431778, -0.25439453, -0.95147705)
+mesh = SubResource("BoxMesh_g50wj")
+
+[node name="Cube1Collider" type="CollisionShape3D" parent="StageGeometry/Environment/Cube1" unique_id=1257595987]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.4391861, -0.25341797, -0.90159607)
 shape = SubResource("BoxShape3D_mncer")
 
