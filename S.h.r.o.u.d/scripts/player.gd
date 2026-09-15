@@ -63,3 +63,7 @@ func _physics_process(delta):
 		velocity.z = move_toward(velocity.z, 0, current_speed)
 
 	move_and_slide()
+
+func _process(_delta):
+	if Input.is_action_just_pressed("ui_cancel"):
+		get_tree().quit()
