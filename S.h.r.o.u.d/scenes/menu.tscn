@@ -1,0 +1,94 @@
+[gd_scene format=3 uid="uid://dn4v5wkv5m7dy"]
+
+[ext_resource type="PackedScene" uid="uid://dkw7wke0fym7t" path="res://assets/shroud_menu/shroud_menu.glb" id="1_lti8b"]
+[ext_resource type="Script" uid="uid://cxmtkb7d5apot" path="res://scripts/menu_camera_animation.gd" id="1_ouk20"]
+[ext_resource type="Script" uid="uid://dv64ovy8ir0k" path="res://scripts/UI/main_menu_ui.gd" id="3_mae5d"]
+
+[sub_resource type="Environment" id="Environment_clyb8"]
+ssr_enabled = true
+ssao_enabled = true
+ssil_enabled = true
+sdfgi_enabled = true
+glow_enabled = true
+fog_enabled = true
+fog_light_color = Color(0, 0, 0, 1)
+fog_density = 0.05
+volumetric_fog_enabled = true
+volumetric_fog_albedo = Color(0.27330798, 0.23611748, 0.21990657, 1)
+adjustment_enabled = true
+adjustment_contrast = 1.15
+
+[sub_resource type="Theme" id="Theme_4hy44"]
+
+[node name="MainMenu" type="Node3D" unique_id=1134085247]
+
+[node name="shroud_menu" parent="." unique_id=2117202208 instance=ExtResource("1_lti8b")]
+
+[node name="Camera3D" type="Camera3D" parent="shroud_menu" unique_id=1891236397]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.75, 17.75)
+script = ExtResource("1_ouk20")
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="shroud_menu" unique_id=1879486868]
+transform = Transform3D(1, 0, 0, 0, -0.17364821, 0.9848078, 0, -0.9848078, -0.17364821, 0, 0, 0)
+light_color = Color(1, 0.6464322, 0.47610474, 1)
+light_energy = 0.15
+light_bake_mode = 1
+shadow_enabled = true
+sky_mode = 1
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="shroud_menu" unique_id=234043126]
+environment = SubResource("Environment_clyb8")
+
+[node name="AreaLight3D" type="AreaLight3D" parent="shroud_menu" unique_id=1730881554]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.0667415, 15.761032)
+light_color = Color(1, 0.78431374, 0.6509804, 1)
+light_energy = 4.0
+light_bake_mode = 1
+shadow_enabled = true
+area_size = Vector2(5.0045176, 0.5269861)
+
+[node name="MainMenuUI" type="Control" parent="." unique_id=64549410]
+layout_mode = 3
+anchors_preset = 0
+offset_right = 40.0
+offset_bottom = 40.0
+theme = SubResource("Theme_4hy44")
+script = ExtResource("3_mae5d")
+
+[node name="Margins" type="MarginContainer" parent="MainMenuUI" unique_id=1631614740]
+custom_minimum_size = Vector2(1152, 0)
+layout_mode = 1
+anchors_preset = -1
+anchor_right = 28.8
+anchor_bottom = 16.2
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 60
+theme_override_constants/margin_top = 60
+theme_override_constants/margin_right = 60
+theme_override_constants/margin_bottom = 60
+metadata/_edit_use_anchors_ = true
+
+[node name="ButtonsList" type="VBoxContainer" parent="MainMenuUI/Margins" unique_id=63619694]
+layout_mode = 2
+alignment = 2
+
+[node name="PlayButton" type="Button" parent="MainMenuUI/Margins/ButtonsList" unique_id=232816006]
+layout_mode = 2
+text = "Play Singleplayer"
+
+[node name="HostButton" type="Button" parent="MainMenuUI/Margins/ButtonsList" unique_id=978054342]
+layout_mode = 2
+text = "Host Game"
+
+[node name="JoinButton" type="Button" parent="MainMenuUI/Margins/ButtonsList" unique_id=1535199890]
+layout_mode = 2
+text = "Join Game"
+
+[node name="SettingsButton" type="Button" parent="MainMenuUI/Margins/ButtonsList" unique_id=523165081]
+layout_mode = 2
+text = "Settings"
+
+[node name="QuitButton" type="Button" parent="MainMenuUI/Margins/ButtonsList" unique_id=1118806647]
+layout_mode = 2
+text = "Quit"

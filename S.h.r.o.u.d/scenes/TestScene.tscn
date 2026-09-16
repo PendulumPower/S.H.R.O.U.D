@@ -1,0 +1,79 @@
+[gd_scene format=3 uid="uid://ccg3f62akah20"]
+
+[ext_resource type="Script" uid="uid://dvkw2m8gepah7" path="res://scripts/player.gd" id="1_2gju5"]
+
+[sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_44a0v"]
+
+[sub_resource type="Sky" id="Sky_84muk"]
+sky_material = SubResource("ProceduralSkyMaterial_44a0v")
+
+[sub_resource type="Environment" id="Environment_g50wj"]
+background_mode = 2
+sky = SubResource("Sky_84muk")
+ssr_enabled = true
+ssao_enabled = true
+ssil_enabled = true
+sdfgi_enabled = true
+glow_enabled = true
+
+[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_1b73q"]
+
+[sub_resource type="BoxMesh" id="BoxMesh_g50wj"]
+size = Vector3(29.819595, 0.49121094, 38.11316)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_mncer"]
+size = Vector3(29.535995, 0.49316406, 37.9393)
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_g50wj"]
+
+[node name="Root" type="Node3D" unique_id=689738362]
+
+[node name="CoreSetup" type="Node3D" parent="." unique_id=1468211656]
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="CoreSetup" unique_id=1332353011]
+environment = SubResource("Environment_g50wj")
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="CoreSetup" unique_id=817318875]
+transform = Transform3D(1, 0, 0, 0, -0.80782396, 0.58942395, 0, -0.58942395, -0.80782396, 0, 7.1590037, -21.871082)
+
+[node name="StageGeometry" type="Node3D" parent="." unique_id=1555146198]
+
+[node name="Environment" type="Node3D" parent="StageGeometry" unique_id=321921663]
+
+[node name="Floor" type="StaticBody3D" parent="StageGeometry/Environment" unique_id=330547928]
+physics_material_override = SubResource("PhysicsMaterial_1b73q")
+
+[node name="FloorMesh" type="MeshInstance3D" parent="StageGeometry/Environment/Floor" unique_id=915860499]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.3431778, -0.25439453, -0.95147705)
+mesh = SubResource("BoxMesh_g50wj")
+
+[node name="FloorCollider" type="CollisionShape3D" parent="StageGeometry/Environment/Floor" unique_id=1626224094]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.4391861, -0.25341797, -0.90159607)
+shape = SubResource("BoxShape3D_mncer")
+
+[node name="Cube1" type="StaticBody3D" parent="StageGeometry/Environment" unique_id=2008067852]
+transform = Transform3D(0.1, 0, 0, 0, 7.11, 0, 0, 0, 0.1, 0, 3.3593242, 8.291591)
+physics_material_override = SubResource("PhysicsMaterial_1b73q")
+
+[node name="Cube1Mesh" type="MeshInstance3D" parent="StageGeometry/Environment/Cube1" unique_id=2128804949]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.3431778, -0.25439453, -0.95147705)
+mesh = SubResource("BoxMesh_g50wj")
+
+[node name="Cube1Collider" type="CollisionShape3D" parent="StageGeometry/Environment/Cube1" unique_id=1257595987]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.4391861, -0.25341797, -0.90159607)
+shape = SubResource("BoxShape3D_mncer")
+
+[node name="Entities" type="Node3D" parent="." unique_id=1491628217]
+
+[node name="Player" type="CharacterBody3D" parent="Entities" unique_id=818783011]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.1643724, 0)
+script = ExtResource("1_2gju5")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Entities/Player" unique_id=602977602]
+shape = SubResource("CapsuleShape3D_g50wj")
+
+[node name="Camera3D" type="Camera3D" parent="Entities/Player" unique_id=1725444172]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.65, 0)
+near = 0.02
+
+[node name="Deviants" type="Node3D" parent="Entities" unique_id=285729945]
