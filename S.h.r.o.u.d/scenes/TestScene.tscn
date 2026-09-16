@@ -1,8 +1,6 @@
 [gd_scene format=3 uid="uid://ccg3f62akah20"]
 
-[ext_resource type="Script" uid="uid://dvkw2m8gepah7" path="res://scripts/player.gd" id="1_mncer"]
-[ext_resource type="PackedScene" uid="uid://ccskahvrvxkhc" path="res://assets/models/Xenon/Xenon.glb" id="2_cguwc"]
-[ext_resource type="Script" uid="uid://cqli4mcpog3uj" path="res://scripts/spring_arm.gd" id="3_wicfy"]
+[ext_resource type="Script" uid="uid://dvkw2m8gepah7" path="res://scripts/player.gd" id="1_2gju5"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_44a0v"]
 
@@ -69,23 +67,13 @@ shape = SubResource("BoxShape3D_mncer")
 
 [node name="Player" type="CharacterBody3D" parent="Entities" unique_id=818783011]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.1643724, 0)
-script = ExtResource("1_mncer")
+script = ExtResource("1_2gju5")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Entities/Player" unique_id=602977602]
 shape = SubResource("CapsuleShape3D_g50wj")
 
-[node name="Xenon" parent="Entities/Player" unique_id=349231754 instance=ExtResource("2_cguwc")]
-transform = Transform3D(-1.5, 0, -1.3113416e-07, 0, 1.5, 0, 1.3113416e-07, 0, -1.5, 0, -1.15, 0)
-
-[node name="SpringArm3D" type="SpringArm3D" parent="Entities/Player" unique_id=480415790 node_paths=PackedStringArray("target")]
-transform = Transform3D(1, 0, 0, 0, 0.93969256, 0.3420201, 0, -0.3420201, 0.93969256, 0, 2, 0)
-top_level = true
-spring_length = 2.5
-script = ExtResource("3_wicfy")
-target = NodePath("..")
-
-[node name="Camera3D" type="Camera3D" parent="Entities/Player/SpringArm3D" unique_id=1725444172]
-transform = Transform3D(1, 0, 0, 0, 0.9396926, -0.34202012, 0, 0.34202012, 0.9396926, 0, 0.65, 0)
+[node name="Camera3D" type="Camera3D" parent="Entities/Player" unique_id=1725444172]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.65, 0)
 near = 0.02
 
 [node name="Deviants" type="Node3D" parent="Entities" unique_id=285729945]

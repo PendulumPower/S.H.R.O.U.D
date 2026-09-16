@@ -13,16 +13,14 @@ extends CharacterBody3D
 
 @export var mouse_sensitivity = 0.002
 
-
 @export var gravity = 15
 
-@onready var camera = $SpringArm3D/Camera3D 
+@onready var camera = $Camera3D 
 @onready var collision_shape = $CollisionShape3D
-@onready var animations = $Xenon/AnimationPlayer
 
-var standing_height = 2.0
-var crouching_height = 1.0
-var camera_normal_y = 1.5
+@export var standing_height = 2.0
+@export var crouching_height = 1.0
+@export var camera_normal_y = 1.5
 
 
 func _ready():
@@ -32,6 +30,13 @@ func _ready():
 		standing_height = collision_shape.shape.height
 	
 		crouching_height = standing_height * 0.5
+
+
+func _unhandled_input(event):
+	if event is InputEventMouseMotion:
+		rotate_y(-event.relative.x * mouse_sensitivity)
+		camera.rotate_x(-event.relative.y * mouse_sensitivity)
+		camera.rotation.x = clamp(camera.rotation.x, -PI * 0.49, PI * 0.49)
 
 
 func _physics_process(delta):	
@@ -80,23 +85,10 @@ func _physics_process(delta):
 	move_and_slide();
 	
 	
-	# rotate to velocity direction
-	var velocity_xz = Vector2(self.velocity.x, self.velocity.z);
-	if velocity_xz.length_squared() > 0.001:
-		var target_angle = atan2(velocity.x, velocity.z);
-		self.rotation.y = lerp_angle(rotation.y, target_angle + PI, rotation_speed * delta);
-	
-	
-	# Play relevant animation
-	if self.velocity.y < -0.1:
-		animations.play("Jump_air RT");
-	elif self.velocity.y > 0.1:
-		animations.play("Jump_Start RT");
-	elif abs(self.velocity.x) + abs(self.velocity.z) > 0.1:
-		animations.play("Run_Stealth RT");
+	if Input.is_action_pressed("crouch"):
+		camera.position.y = standing_height * 0.5 - crouching_height;
 	else:
-		animations.play("Idle_FoldArms RT");
-	
+		camera.position.y = standing_height * 0.5 - camera_normal_y;
 
 
 func _process(_delta):
