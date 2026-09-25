@@ -1,10 +1,10 @@
 extends CharacterBody3D
 
 
-@export var walk_speed = 5.0
-@export var sprint_speed = 8.0
-@export var crouch_speed = 2.5
-@export var jump_velocity = 10.0
+@export var walk_speed = 3
+@export var sprint_speed = 6
+@export var crouch_speed = 1.5
+@export var jump_velocity = 8
 @export var acceleration = 1.0
 @export var speed_mult = 10.0
 @export_range(0.0, 1.0, 0.025) var friction = 0.9
@@ -13,7 +13,7 @@ extends CharacterBody3D
 
 @export var mouse_sensitivity = 0.002
 
-@export var gravity = 15
+@export var gravity = 20
 
 @onready var camera = $Camera3D 
 @onready var collision_shape = $CollisionShape3D

@@ -1,6 +1,6 @@
 extends Control
 
-@export_file("*.tscn") var game_scene_path: String = "res://TestScene.tcsn"
+@export_file("*.tscn") var game_scene_path: String = "res://scenes/TestScene.tscn"
 
 @onready var play_button: Button = $Margins/ButtonsList/PlayButton
 @onready var settings_button: Button = $Margins/ButtonsList/SettingsButton
@@ -17,7 +17,7 @@ func _ready() -> void:
 	join_button.pressed.connect(_on_join_pressed)
 
 func _on_play_pressed() -> void:
-	get_tree().change_scene_to_file("res://TestScene.tscn")
+	get_tree().change_scene_to_file("res://scenes/TestScene.tscn")
 
 func _on_host_pressed() -> void:
 	print("Multiplayer not yet implemented")	
